@@ -3,4 +3,5 @@ Installation:
 
 Python dependencies:
 	- selenium
+	- pynput
 	- yaml
