@@ -3,5 +3,5 @@ Installation:
 
 Python dependencies:
 	- selenium
-	- pynput
+	- gpiozero
 	- yaml

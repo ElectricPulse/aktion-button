@@ -1,4 +1,4 @@
-ARGS = -y headful
+ARGS = -y
 
 run:
 	python3 main.py ${ARGS}

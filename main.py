@@ -132,9 +132,9 @@ def monitor(driver, led):
                 return True
 
         if(lastState != state):
-            if(state)
+            if(state):
                 led.on()
-            else
+            else:
                 led.off()
 
             lastState = state
