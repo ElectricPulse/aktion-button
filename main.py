@@ -1,10 +1,11 @@
-import pynput
+import args
+import os
 import yaml
 import time
 import sys
+import pynput
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
+import selenium
 
 def loadYaml(path):
     try:
@@ -33,7 +34,6 @@ def login(driver, username, password):
         return True
 
     return False
-
 
 def getLastEvent(driver):
     try:
@@ -65,21 +65,7 @@ def makeAction(driver, action):
 
     return False
 
-def run(headful, ask):
-    config = loadYaml('./config.yaml')
-
-    if(config == None):
-        print("Couldn't load config", file=sys.stderr)
-        return True
-
-    try:
-        username = config['username']
-        password = config['password']
-    except KeyError as err:
-        print('Missing key', err)
-        print('Invalid config', file=sys.stderr)
-        return True
-
+def init(headful):
     options = webdriver.ChromeOptions()
 
     if(not headful):
@@ -87,11 +73,10 @@ def run(headful, ask):
 
     driver = webdriver.Chrome(options=options)
     driver.get('https://cloud.aktion.cz')
-    
-    if(login(driver, username, password)):
-        print("Couldn't login", file=sys.stderr)
-        return True
 
+    return driver
+
+def run(driver, ask):
     event = getLastEvent(driver)
 
     if(event == None):
@@ -124,53 +109,96 @@ def run(headful, ask):
 
     return False
 
-class Opts:
-    def __init__(self):
-        self.headful = False
-        self.keepalive = False
-        self.ask = True
+def app(driver, keepalive, ask):
+    err = run(driver, ask)
 
-def processArgs(args):
-    opts = Opts()
-
-    for i in range(0, len(args)):
-        match(args[i]):
-                case 'headful':
-                    opts.headful = True
-                case 'keepalive':
-                    opts.keepalive = True
-                case '-y':
-                    opts.ask = False
-                case _:
-                    print('Invalid argument: ', args[i], file=sys.stderr)
-                    return None
-    return opts
-
-
-def app():
-    argc = len(sys.argv)
+    if(keepalive):
+        input('Press key to exit ')
     
-    if(argc > 3):
-        print('Invalid number of arguments', file=sys.stderr)
-        return True
+    return err
 
-    opts = processArgs(sys.argv[1:])
+def checkDeviceExists(id):
+    path = '/sys/bus/usb/devices/' + id + '/driver'
+    return os.path.exists(path)
+
+def attendanceChangeHandler(state):
+    bus = 1
+    device = 7
+    id = str(bus) + '-' + str(device)
+
+    existance = checkDeviceExists(id)
+
+    #The device is in the correct state
+    if(existance == state):
+        return False
+
+    if(state):
+        path = '/sys/bus/usb/drivers/usb/bind'
+    else:
+        path = '/sys/bus/usb/drivers/usb/unbind'
+
+    try:
+        dev = open(path, 'w')
+        dev.write(id)
+    except Exception as err:
+        print(err, file=sys.stderr)
+        return True
+    
+    dev.close()
+
+    return False
+
+def monitor(driver):
+    lastState = None
+
+    while True:
+        state = getLastEvent(driver)
+
+        if(state == None):
+                print("Couldn't get last event")
+                return True
+
+        if(lastState != state):
+            attendanceChangeHandler(state)
+            lastState = state
+
+        time.sleep(1)
+
+def main():
+    opts = args.processArgs(sys.argv[1:])
 
     if(opts == None):
         print('Invalid arguments', file=sys.stderr)
         return True
 
-    err = run(opts.headful, opts.ask)
+    driver = init(opts.headful)
 
-    if(opts.keepalive):
-        input('Press key to exit ')
+    config = loadYaml('./config.yaml')
+
+    if(config == None):
+        print("Couldn't load config", file=sys.stderr)
+        return True
+
+    try:
+        username = config['username']
+        password = config['password']
+    except KeyError as err:
+        print('Missing key', err)
+        print('Invalid config', file=sys.stderr)
+        return True
+        
+    if(login(driver, username, password)):
+        print("Couldn't login", file=sys.stderr)
+        return True
+
+    #def keyboardHandler(key):
+    #   if key == pynput.keyboard.Key.f1:
+    #       app(driver, opts.keepalive, opts.ask)
+
+    #listener = pynput.keyboard.Listener(on_press=keyboardHandler)
+    #listener.start()
     
-    return err
-
-def main():
-    while True:
-        c = keyboard.read_key()
-        print(c)
-
+    monitor(driver)
+    
 if(main()):
     exit(1)

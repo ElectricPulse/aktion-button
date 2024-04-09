@@ -1,10 +1,7 @@
-ARGS = keepalive headful
-
-run-headful:
-	python3 main.py ${ARGS}
+ARGS = -y headful
 
 run:
-	python3 main.py
+	python3 main.py ${ARGS}
 
 debug:
 	python3 -m pdb main.py ${ARGS}
