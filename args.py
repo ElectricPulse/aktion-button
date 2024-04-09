@@ -1,3 +1,5 @@
+import sys
+
 class Opts:
     def __init__(self):
         self.headful = False
@@ -13,7 +15,7 @@ def processArgs(args):
 
     for i in range(0, len(args)):
         match(args[i]):
-                case 'headful':
+                case '--headful':
                     opts.headful = True
                 case _:
                     print('Invalid argument: ', args[i], file=sys.stderr)
