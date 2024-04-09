@@ -15,10 +15,6 @@ def processArgs(args):
         match(args[i]):
                 case 'headful':
                     opts.headful = True
-                case 'keepalive':
-                    opts.keepalive = True
-                case '-y':
-                    opts.ask = False
                 case _:
                     print('Invalid argument: ', args[i], file=sys.stderr)
                     return None

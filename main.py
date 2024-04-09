@@ -1,4 +1,5 @@
 import gpiozero
+import threading
 import args
 import os
 import yaml
@@ -76,7 +77,7 @@ def init(headful):
 
     return driver
 
-def run(driver, ask):
+def run(driver):
     event = getLastEvent(driver)
 
     if(event == None):
@@ -84,12 +85,6 @@ def run(driver, ask):
         return True
 
     print("The last event was", 'arrival' if event else 'departure')
-
-    if(ask):
-        res = input('Do you want to proceed to do the opposite action? (./y) ')
-
-        if(res != 'y'):
-            return False
 
     if(makeAction(driver, not event)):
         print("Couldn't make action")
@@ -109,19 +104,11 @@ def run(driver, ask):
 
     return False
 
-def app(driver, keepalive, ask):
-    err = run(driver, ask)
-
-    if(keepalive):
-        input('Press key to exit ')
-    
-    return err
-
 def checkDeviceExists(id):
     path = '/sys/bus/usb/devices/' + id + '/driver'
     return os.path.exists(path)
 
-def monitor(driver, led):
+def monitorOutput(driver, led):
     lastState = None
 
     while True:
@@ -140,6 +127,17 @@ def monitor(driver, led):
             lastState = state
 
         time.sleep(1)
+
+def monitorInput(driver, button):
+    while True:
+        button.wait_for_press()
+
+        err = run(driver)
+
+        if(err):
+            return True
+
+    return False
 
 def main():
     opts = args.processArgs(sys.argv[1:])
@@ -172,7 +170,10 @@ def main():
     button = gpiozero.Button('GPIO4')
     led = gpiozero.LED('GPIO5')
 
-    monitor(driver, led)
+    thread = threading.Thread(target=monitorOutput, args=(driver,led))
+    thread.start()
+
+    monitorInput(driver, button)
 
 if(main()):
     exit(1)
