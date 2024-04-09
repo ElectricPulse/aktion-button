@@ -5,6 +5,7 @@ import os
 import yaml
 import time
 import sys
+from selenium.webdriver.common.by import By
 from selenium import webdriver
 import selenium
 
@@ -23,12 +24,12 @@ def loadYaml(path):
 def login(driver, username, password):
     try:
         time.sleep(3)
-        usernameField = driver.find_element('id', 'txtLogin_I')
+        usernameField = driver.find_element(By.ID, 'txtLogin_I')
         usernameField.send_keys(username)
-        passwordField = driver.find_element('id', 'txtPassword_I')
-        passwordField.find_element('xpath', '..').click()
+        passwordField = driver.find_element(By.ID, 'txtPassword_I')
+        passwordField.find_element(By.XPATH, '..').click()
         passwordField.send_keys(password)
-        driver.find_element('id', 'btnLogin').click()
+        driver.find_element(By.ID, 'btnLogin').click()
         time.sleep(2)
     except Exception as err:
         print(err, file=sys.stderr)
@@ -38,8 +39,8 @@ def login(driver, username, password):
 
 def getLastEvent(driver):
     try:
-        events = driver.find_element('id', 'webtlasteventsbody')
-        lastEvent = events.find_elements('xpath', './/*')[2]
+        events = driver.find_element(By.ID, 'webtlasteventsbody')
+        lastEvent = events.find_elements(By.XPATH, './/*')[2]
         lastEventHTML = lastEvent.get_attribute('innerHTML')
     except Exception as err:
         print(err, file=sys.stderr)
@@ -56,9 +57,9 @@ def getLastEvent(driver):
 def makeAction(driver, action):
     try:
         className = 'btn-primary' if action else 'btn-secondary'
-        button = driver.find_element('class', className)
+        button = driver.find_element(By.CLASS_NAME, className)
         button.click()
-        confirm = driver.find_element('id', 'ctl00_phContent_webterminal_popupWebTerminal_btnPotvrdit_CD')
+        confirm = driver.find_element(By.ID, 'ctl00_phContent_webterminal_popupWebTerminal_btnPotvrdit_CD')
         confirm.click()
     except Exception as err:
         print(err, file=sys.stderr)
