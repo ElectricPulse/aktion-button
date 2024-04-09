@@ -21,11 +21,11 @@ def loadYaml(path):
 
 def login(driver, username, password):
     try:
-        time.sleep(1)
+        time.sleep(3)
         usernameField = driver.find_element('id', 'txtLogin_I')
         usernameField.send_keys(username)
         passwordField = driver.find_element('id', 'txtPassword_I')
-        passwordField.find_element_by_xpath('..').click()
+        passwordField.find_element('xpath', '..').click()
         passwordField.send_keys(password)
         driver.find_element('id', 'btnLogin').click()
         time.sleep(2)
@@ -38,7 +38,7 @@ def login(driver, username, password):
 def getLastEvent(driver):
     try:
         events = driver.find_element('id', 'webtlasteventsbody')
-        lastEvent = events.find_elements_by_xpath('.//*')[2]
+        lastEvent = events.find_elements('xpath', './/*')[2]
         lastEventHTML = lastEvent.get_attribute('innerHTML')
     except Exception as err:
         print(err, file=sys.stderr)
@@ -55,7 +55,7 @@ def getLastEvent(driver):
 def makeAction(driver, action):
     try:
         className = 'btn-primary' if action else 'btn-secondary'
-        button = driver.find_element_by_class_name(className)
+        button = driver.find_element('class', className)
         button.click()
         confirm = driver.find_element('id', 'ctl00_phContent_webterminal_popupWebTerminal_btnPotvrdit_CD')
         confirm.click()
