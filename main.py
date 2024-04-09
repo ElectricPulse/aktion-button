@@ -1,9 +1,9 @@
+import gpiozero
 import args
 import os
 import yaml
 import time
 import sys
-import pynput
 from selenium import webdriver
 import selenium
 
@@ -121,34 +121,7 @@ def checkDeviceExists(id):
     path = '/sys/bus/usb/devices/' + id + '/driver'
     return os.path.exists(path)
 
-def attendanceChangeHandler(state):
-    bus = 1
-    device = 7
-    id = str(bus) + '-' + str(device)
-
-    existance = checkDeviceExists(id)
-
-    #The device is in the correct state
-    if(existance == state):
-        return False
-
-    if(state):
-        path = '/sys/bus/usb/drivers/usb/bind'
-    else:
-        path = '/sys/bus/usb/drivers/usb/unbind'
-
-    try:
-        dev = open(path, 'w')
-        dev.write(id)
-    except Exception as err:
-        print(err, file=sys.stderr)
-        return True
-    
-    dev.close()
-
-    return False
-
-def monitor(driver):
+def monitor(driver, led):
     lastState = None
 
     while True:
@@ -159,7 +132,11 @@ def monitor(driver):
                 return True
 
         if(lastState != state):
-            attendanceChangeHandler(state)
+            if(state)
+                led.on()
+            else
+                led.off()
+
             lastState = state
 
         time.sleep(1)
@@ -191,14 +168,11 @@ def main():
         print("Couldn't login", file=sys.stderr)
         return True
 
-    #def keyboardHandler(key):
-    #   if key == pynput.keyboard.Key.f1:
-    #       app(driver, opts.keepalive, opts.ask)
 
-    #listener = pynput.keyboard.Listener(on_press=keyboardHandler)
-    #listener.start()
-    
-    monitor(driver)
-    
+    button = gpiozero.Button('GPIO4')
+    led = gpiozero.LED('GPIO5')
+
+    monitor(driver, led)
+
 if(main()):
     exit(1)
