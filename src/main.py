@@ -1,5 +1,6 @@
 import gpiozero
 import threading
+import sys
 import args
 import logic
 
@@ -33,7 +34,7 @@ def main():
     button = gpiozero.Button('GPIO4')
     led = gpiozero.LED('GPIO5')
 
-    thread = threading.Thread(target=monitorOutput, args=(driver,led))
+    thread = threading.Thread(target=logic.monitorOutput, args=(driver,led))
     thread.start()
 
     logic.monitorInput(driver, button)

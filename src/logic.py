@@ -1,5 +1,6 @@
 import time
 import sys
+import yaml
 import attendance
 from selenium.webdriver.common.by import By
 from selenium import webdriver
