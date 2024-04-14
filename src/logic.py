@@ -1,22 +1,10 @@
 import time
-import sys
-import yaml
 import attendance
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import selenium
-
-def loadYaml(path):
-    try:
-        file = open(path, 'r')
-        data = yaml.load(file, Loader=yaml.FullLoader)
-    except Exception as err:
-        print(err, file=sys.stderr)
-        data = None
-
-    file.close()
-
-    return data
+import sys
+import userio
 
 def init(headful):
     options = webdriver.ChromeOptions()
@@ -34,42 +22,43 @@ def login(driver, username, password):
     try:
         usernameField = driver.find_element(By.ID, 'txtLogin_I')
         usernameField.send_keys(username)
+
         passwordField = driver.find_element(By.ID, 'txtPassword_I')
         passwordField.find_element(By.XPATH, '..').click()
+        passwordField = driver.find_element(By.ID, 'txtPassword_I')
         passwordField.send_keys(password)
         driver.find_element(By.ID, 'btnLogin').click()
-        time.sleep(1)
+        attendance.ensureLoaded(driver)
     except Exception as err:
         print(err, file=sys.stderr)
         return True
 
     return False
 
-def monitorOutput(driver, led):
+def monitorOutput(driver, led, lock):
     lastState = None
 
     while True:
+        lock.acquire()
         state = attendance.getAttendance(driver)
+        lock.release()
 
         if(state == None):
-                print("Couldn't get last event")
-                return True
+            print("Couldn't get current attendance", file=sys.stderr)
+            break
 
-        if(lastState != state):
-            if(state):
-                led.on()
-            else:
-                led.off()
+        attendance.displayAttendance(led, state)
+        time.sleep(30)
 
-            lastState = state
-
-        time.sleep(1)
-
-def monitorInput(driver, button):
+def monitorInput(driver, button, led, leds, lock):
     while True:
         button.wait_for_press()
 
-        err = attendance.flipAttendance(driver)
+        progressThread = userio.startShowingProgress(leds)
+        lock.acquire()
+        err = attendance.flipAttendance(driver, led)
+        lock.release()
+        userio.stopShowingProgress(progressThread)
 
         if(err):
             return True
