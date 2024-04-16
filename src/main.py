@@ -1,9 +1,11 @@
 import time
 import threading
+import os
 import sys
 import args
 import logic
 import config
+import utils
 from userConfig import loadUserConfig
 
 def main():
@@ -27,14 +29,27 @@ def main():
         print("Couldn't login", file=sys.stderr)
         return True
 
+    exitEvent = threading.Event()
     lock = threading.Lock()
 
     print('Starting output handler')
-    thread = threading.Thread(target=logic.monitorOutput, args=(driver, config.io['led'], lock))
-    thread.start()
+    th1 = threading.Thread(
+            target=utils.runThread,
+            args=(logic.monitorOutput, (driver, config.io['led'], lock), exitEvent)
+        )
+    th1.start()
 
     print('Starting input listener')
-    logic.monitorInput(driver, config.io['button'], config.io['led'], config.io['leds'], lock)
+    th2 = threading.Thread(target=utils.runThread,
+            args=(logic.monitorInput, (driver, config.io['button'], config.io['led'], config.io['leds'], lock),
+            exitEvent)
+        )
+    th2.start()
 
-if(main()):
-    exit(1)
+    while not exitEvent.is_set():
+        time.sleep(1)
+
+    print("Atleast one thread exited")
+    return 1
+
+os._exit(main())

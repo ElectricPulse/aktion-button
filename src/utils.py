@@ -12,3 +12,11 @@ def loadYaml(path):
     file.close()
 
     return data
+
+def runThread(func, args, exitEvent):
+    try:
+        func(*args, exitEvent)
+    finally:
+        exitEvent.set()
+
+

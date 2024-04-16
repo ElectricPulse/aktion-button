@@ -5,7 +5,7 @@ led1 = gpiozero.LED('GPIO6')
 led2 = gpiozero.LED('GPIO13')
 led3 = gpiozero.LED('GPIO19')
 
-waitTimeout = 10000
+waitTimeout = 5
 
 io = {
     'button': gpiozero.Button('GPIO4'),

@@ -35,10 +35,10 @@ def login(driver, username, password):
 
     return False
 
-def monitorOutput(driver, led, lock):
+def monitorOutput(driver, led, lock, exitEvent):
     lastState = None
 
-    while True:
+    while not exitEvent.is_set():
         lock.acquire()
         state = attendance.getAttendance(driver)
         lock.release()
@@ -48,13 +48,13 @@ def monitorOutput(driver, led, lock):
             break
 
         attendance.displayAttendance(led, state)
-        time.sleep(30)
+        time.sleep(1)
 
-def monitorInput(driver, button, led, leds, lock):
-    while True:
+def monitorInput(driver, button, led, leds, lock, exitEvent):
+    while not exitEvent.is_set():
         button.wait_for_press()
 
-        progressThread = userio.startShowingProgress(leds)
+        progressThread = userio.startShowingProgress(leds, exitEvent)
         lock.acquire()
         err = attendance.flipAttendance(driver, led)
         lock.release()

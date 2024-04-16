@@ -26,8 +26,17 @@ def reload(driver):
     driver.refresh()
     ensureLoaded(driver)
 
+def checkOffline(driver):
+    statusElement = driver.find_element(By.CLASS_NAME, 'terminal-timerCounter')
+    html = statusElement.get_attribute('innerHTML')
+    offline = html.find('offline') != -1
+    return offline
+
 def getAttendance(driver):
-    reload(driver)
+    if checkOffline(driver):
+        print('In offline state, reloading', file=sys.stderr)
+        reload(driver)
+
     event = driver.find_element(By.XPATH, '//*[@id="webtlasteventsbody"]/*[2]')
 
     if(not event):
@@ -42,6 +51,10 @@ def getAttendance(driver):
 
 def setAttendance(driver, state):
     reload(driver)
+    return False
+    if checkOffline(driver):
+        reload(driver)
+
     className = 'btn-primary' if state else 'btn-secondary'
     button = driver.find_element(By.CLASS_NAME, className)
     button.click()
