@@ -1,5 +1,4 @@
 import sys
-import time
 import logic
 import config
 from selenium.webdriver.support.wait import WebDriverWait
@@ -12,7 +11,31 @@ def displayAttendance(led, state):
     else:
         led.off()
 
-def ensureLoaded(driver):
+def login(driver, username, password):
+    ensureLoginLoaded(driver)
+
+    usernameField = driver.find_element(By.ID, 'txtLogin_I')
+    usernameField.send_keys(username)
+
+    passwordField = driver.find_element(By.ID, 'txtPassword_I')
+    passwordField.find_element(By.XPATH, '..').click()
+    passwordField = driver.find_element(By.ID, 'txtPassword_I')
+    passwordField.send_keys(password)
+    driver.find_element(By.ID, 'btnLogin').click()
+
+    ensureDashboardLoaded(driver)
+
+def ensureLoginLoaded(driver):
+    field1 = 'txtLogin_I'
+    field2 = 'txtPassword_I'
+    btn = 'btnLogin'
+
+    wait = WebDriverWait(driver, config.waitTimeout)
+    wait.until(EC.element_to_be_clickable((By.ID, field1)))
+    wait.until(EC.presence_of_element_located((By.ID, field2)))
+    wait.until(EC.element_to_be_clickable((By.ID, btn)))
+
+def ensureDashboardLoaded(driver):
     btn1 = 'btn-primary'
     btn2 = 'btn-secondary'
     eventsList = "webtlasteventsbody"
@@ -21,10 +44,11 @@ def ensureLoaded(driver):
     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, btn1)))
     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, btn2)))
     wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="webtlasteventsbody"]/*[2]')))
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'terminal-timerCounter')))
 
 def reload(driver):
     driver.refresh()
-    ensureLoaded(driver)
+    login()
 
 def checkOffline(driver):
     statusElement = driver.find_element(By.CLASS_NAME, 'terminal-timerCounter')
@@ -50,8 +74,6 @@ def getAttendance(driver):
     return False
 
 def setAttendance(driver, state):
-    reload(driver)
-    return False
     if checkOffline(driver):
         reload(driver)
 
@@ -60,7 +82,7 @@ def setAttendance(driver, state):
     button.click()
     confirm = driver.find_element(By.ID, 'ctl00_phContent_webterminal_popupWebTerminal_btnPotvrdit_CD')
     confirm.click()
-    ensureLoaded(driver)
+    ensureDashboardLoaded(driver)
 
     return False
 

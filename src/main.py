@@ -21,14 +21,9 @@ def main():
         print("Couldn't load config", file=sys.stderr)
         return True
         
-    print('Launching browser')
-    driver = logic.init(opts.headful)
+    print('Initializing')
+    driver = logic.init(opts.headful, userConfig['username'], userConfig['password'])
         
-    print('Logging in')
-    if(logic.login(driver, userConfig['username'], userConfig['password'])):
-        print("Couldn't login", file=sys.stderr)
-        return True
-
     exitEvent = threading.Event()
     lock = threading.Lock()
 

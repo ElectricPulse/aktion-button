@@ -1,12 +1,12 @@
 import time
-import attendance
+import api
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import selenium
 import sys
 import userio
 
-def init(headful):
+def init(headful, username, password):
     options = webdriver.ChromeOptions()
 
     if(not headful):
@@ -14,40 +14,24 @@ def init(headful):
 
     driver = webdriver.Chrome(options=options)
     driver.get('https://cloud.aktion.cz')
-    time.sleep(1)
+
+    api.login(driver, username, password)
 
     return driver
-
-def login(driver, username, password):
-    try:
-        usernameField = driver.find_element(By.ID, 'txtLogin_I')
-        usernameField.send_keys(username)
-
-        passwordField = driver.find_element(By.ID, 'txtPassword_I')
-        passwordField.find_element(By.XPATH, '..').click()
-        passwordField = driver.find_element(By.ID, 'txtPassword_I')
-        passwordField.send_keys(password)
-        driver.find_element(By.ID, 'btnLogin').click()
-        attendance.ensureLoaded(driver)
-    except Exception as err:
-        print(err, file=sys.stderr)
-        return True
-
-    return False
 
 def monitorOutput(driver, led, lock, exitEvent):
     lastState = None
 
     while not exitEvent.is_set():
         lock.acquire()
-        state = attendance.getAttendance(driver)
+        state = api.getAttendance(driver)
         lock.release()
 
         if(state == None):
             print("Couldn't get current attendance", file=sys.stderr)
             break
 
-        attendance.displayAttendance(led, state)
+        api.displayAttendance(led, state)
         time.sleep(1)
 
 def monitorInput(driver, button, led, leds, lock, exitEvent):
@@ -56,7 +40,7 @@ def monitorInput(driver, button, led, leds, lock, exitEvent):
 
         progressThread = userio.startShowingProgress(leds, exitEvent)
         lock.acquire()
-        err = attendance.flipAttendance(driver, led)
+        err = api.flipAttendance(driver, led)
         lock.release()
         userio.stopShowingProgress(progressThread)
 
