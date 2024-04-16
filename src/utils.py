@@ -16,6 +16,8 @@ def loadYaml(path):
 def runThread(func, args, exitEvent):
     try:
         func(*args, exitEvent)
+    except Exception as err:
+        print("Error in thread: ", err, file=sys.stderr)
     finally:
         exitEvent.set()
 

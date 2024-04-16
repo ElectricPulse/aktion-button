@@ -11,16 +11,16 @@ def displayAttendance(led, state):
     else:
         led.off()
 
-def login(driver, username, password):
+def login(driver, userConfig):
     ensureLoginLoaded(driver)
 
     usernameField = driver.find_element(By.ID, 'txtLogin_I')
-    usernameField.send_keys(username)
+    usernameField.send_keys(userConfig['username'])
 
     passwordField = driver.find_element(By.ID, 'txtPassword_I')
     passwordField.find_element(By.XPATH, '..').click()
     passwordField = driver.find_element(By.ID, 'txtPassword_I')
-    passwordField.send_keys(password)
+    passwordField.send_keys(userConfig['password'])
     driver.find_element(By.ID, 'btnLogin').click()
 
     ensureDashboardLoaded(driver)
@@ -46,9 +46,10 @@ def ensureDashboardLoaded(driver):
     wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="webtlasteventsbody"]/*[2]')))
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'terminal-timerCounter')))
 
-def reload(driver):
+def reload(driver, userConfig):
+    print('In offline state, reloading', file=sys.stderr)
     driver.refresh()
-    login()
+    login(driver, userConfig)
 
 def checkOffline(driver):
     statusElement = driver.find_element(By.CLASS_NAME, 'terminal-timerCounter')
@@ -56,10 +57,9 @@ def checkOffline(driver):
     offline = html.find('offline') != -1
     return offline
 
-def getAttendance(driver):
+def getAttendance(driver, userConfig):
     if checkOffline(driver):
-        print('In offline state, reloading', file=sys.stderr)
-        reload(driver)
+        reload(driver, userConfig)
 
     event = driver.find_element(By.XPATH, '//*[@id="webtlasteventsbody"]/*[2]')
 
@@ -73,9 +73,9 @@ def getAttendance(driver):
 
     return False
 
-def setAttendance(driver, state):
+def setAttendance(driver, state, userConfig):
     if checkOffline(driver):
-        reload(driver)
+        reload(driver, userConfig)
 
     className = 'btn-primary' if state else 'btn-secondary'
     button = driver.find_element(By.CLASS_NAME, className)
@@ -86,8 +86,8 @@ def setAttendance(driver, state):
 
     return False
 
-def flipAttendance(driver, led):
-    state = getAttendance(driver)
+def flipAttendance(driver, led, userConfig):
+    state = getAttendance(driver, userConfig)
 
     if(state == None):
         print("Couldn't get attendance state", file=sys.stderr)
@@ -95,11 +95,11 @@ def flipAttendance(driver, led):
 
     print("The last attendance state was", 'arrival' if state else 'departure')
 
-    if(setAttendance(driver, not state)):
+    if(setAttendance(driver, not state, userConfig)):
         print("Couldn't set attendance")
         return True
 
-    newState = getAttendance(driver)
+    newState = getAttendance(driver, userConfig)
 
     if(newState == None):
         print("Couldn't get verifying attendance state", file=sys.stderr)

@@ -22,7 +22,7 @@ def main():
         return True
         
     print('Initializing')
-    driver = logic.init(opts.headful, userConfig['username'], userConfig['password'])
+    driver = logic.init(opts.headful, userConfig)
         
     exitEvent = threading.Event()
     lock = threading.Lock()
@@ -30,13 +30,13 @@ def main():
     print('Starting output handler')
     th1 = threading.Thread(
             target=utils.runThread,
-            args=(logic.monitorOutput, (driver, config.io['led'], lock), exitEvent)
+            args=(logic.monitorOutput, (driver, config.io['led'], lock, userConfig), exitEvent)
         )
     th1.start()
 
     print('Starting input listener')
     th2 = threading.Thread(target=utils.runThread,
-            args=(logic.monitorInput, (driver, config.io['button'], config.io['led'], config.io['leds'], lock),
+            args=(logic.monitorInput, (driver, config.io['button'], config.io['led'], config.io['leds'], lock, userConfig),
             exitEvent)
         )
     th2.start()
@@ -45,6 +45,7 @@ def main():
         time.sleep(1)
 
     print("Atleast one thread exited")
+    print("Currently running", threading.active_count(), "threads")
     return 1
 
 os._exit(main())

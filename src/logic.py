@@ -6,7 +6,7 @@ import selenium
 import sys
 import userio
 
-def init(headful, username, password):
+def init(headful, userConfig):
     options = webdriver.ChromeOptions()
 
     if(not headful):
@@ -15,16 +15,16 @@ def init(headful, username, password):
     driver = webdriver.Chrome(options=options)
     driver.get('https://cloud.aktion.cz')
 
-    api.login(driver, username, password)
+    api.login(driver, userConfig)
 
     return driver
 
-def monitorOutput(driver, led, lock, exitEvent):
+def monitorOutput(driver, led, lock, userConfig, exitEvent):
     lastState = None
 
     while not exitEvent.is_set():
         lock.acquire()
-        state = api.getAttendance(driver)
+        state = api.getAttendance(driver, userConfig)
         lock.release()
 
         if(state == None):
@@ -34,13 +34,13 @@ def monitorOutput(driver, led, lock, exitEvent):
         api.displayAttendance(led, state)
         time.sleep(1)
 
-def monitorInput(driver, button, led, leds, lock, exitEvent):
+def monitorInput(driver, button, led, leds, lock, userConfig, exitEvent):
     while not exitEvent.is_set():
         button.wait_for_press()
 
         progressThread = userio.startShowingProgress(leds, exitEvent)
         lock.acquire()
-        err = api.flipAttendance(driver, led)
+        err = api.flipAttendance(driver, led, userConfig)
         lock.release()
         userio.stopShowingProgress(progressThread)
 
