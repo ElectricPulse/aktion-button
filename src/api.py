@@ -5,6 +5,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+EVENTS_LIST='webtlasteventsbody'
+
 def displayAttendance(led, state):
     if(state):
         led.on()
@@ -15,11 +17,13 @@ def login(driver, userConfig):
     ensureLoginLoaded(driver)
 
     usernameField = driver.find_element(By.ID, 'txtLogin_I')
+    usernameField.clear()
     usernameField.send_keys(userConfig['username'])
 
     passwordField = driver.find_element(By.ID, 'txtPassword_I')
     passwordField.find_element(By.XPATH, '..').click()
     passwordField = driver.find_element(By.ID, 'txtPassword_I')
+    passwordField.clear()
     passwordField.send_keys(userConfig['password'])
     driver.find_element(By.ID, 'btnLogin').click()
 
@@ -38,12 +42,11 @@ def ensureLoginLoaded(driver):
 def ensureDashboardLoaded(driver):
     btn1 = 'btn-primary'
     btn2 = 'btn-secondary'
-    eventsList = "webtlasteventsbody"
 
     wait = WebDriverWait(driver, config.waitTimeout)
     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, btn1)))
     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, btn2)))
-    wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="webtlasteventsbody"]/*[2]')))
+    wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="' + EVENTS_LIST + '"]/*[2]')))
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'terminal-timerCounter')))
 
 def reload(driver, userConfig):
@@ -61,7 +64,7 @@ def getAttendance(driver, userConfig):
     if checkOffline(driver):
         reload(driver, userConfig)
 
-    event = driver.find_element(By.XPATH, '//*[@id="webtlasteventsbody"]/*[2]')
+    event = driver.find_element(By.XPATH, '//*[@id="' + EVENTS_LIST + '"]/*[2]')
 
     if(not event):
         return None
