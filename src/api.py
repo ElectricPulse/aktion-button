@@ -46,7 +46,7 @@ def ensureDashboardLoaded(driver):
     wait = WebDriverWait(driver, config.waitTimeout)
     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, btn1)))
     wait.until(EC.element_to_be_clickable((By.CLASS_NAME, btn2)))
-    wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="' + EVENTS_LIST + '"]/*[2]')))
+    wait.until(EC.presence_of_element_located((By.ID, EVENTS_LIST)))
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'terminal-timerCounter')))
 
 def reload(driver, userConfig):
@@ -64,7 +64,12 @@ def getAttendance(driver, userConfig):
     if checkOffline(driver):
         reload(driver, userConfig)
 
-    event = driver.find_element(By.XPATH, '//*[@id="' + EVENTS_LIST + '"]/*[2]')
+    events = driver.find_elements(By.XPATH, '//*[@id="' + EVENTS_LIST + '"]/*')
+
+    if len(events) == 0:
+        return False
+
+    event = events[1]
 
     if(not event):
         return None
